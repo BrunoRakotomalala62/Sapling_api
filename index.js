@@ -10,7 +10,7 @@ async function rephraseText(text) {
         const response = await axios.post(
             'https://api.sapling.ai/api/v1/rephrase',
             {
-                key: 'K25KHEKEIOSCMV3VLURR67URUDUQLYDU',
+                key: process.env.API_KEY_SAPLING,
                 text,
                 mapping: 'informal_to_formal'
             },
