@@ -5,6 +5,9 @@ import axios from 'axios';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Middleware pour parser le JSON
+app.use(express.json());
+
 async function rephraseText(text) {
     try {
         const response = await axios.post(
@@ -53,6 +56,22 @@ async function autocompleteText(query) {
         return response.data;
     } catch (err) {
         throw new Error(err.response?.data?.msg || 'Error completing text');
+    }
+}
+
+async function summarizeText(text) {
+    try {
+        const response = await axios.post(
+            'https://api.sapling.ai/api/v1/summarize',
+            {
+                key: process.env.API_KEY_SAPLING,
+                text,
+            },
+        );
+
+        return response.data;
+    } catch (err) {
+        throw new Error(err.response?.data?.msg || 'Error summarizing text');
     }
 }
 
@@ -108,7 +127,7 @@ app.get('/autocomplete', async (req, res) => {
     }
 
     try {
-        const data = await autocompleteText(sapling_phrase);
+        const data = await autocompleteText(sapling_phras);
         
         return res.json({
             "phrase incomplète": sapling_phras,
@@ -120,9 +139,30 @@ app.get('/autocomplete', async (req, res) => {
     }
 });
 
+app.post('/summarize', async (req, res) => {
+    const { text } = req.body;
+    
+    if (!text) {
+        return res.status(400).json({ error: 'Parameter text is required in request body' });
+    }
+
+    try {
+        const data = await summarizeText(text);
+        
+        return res.json({
+            "texte original": text.substring(0, 100) + (text.length > 100 ? "..." : ""),
+            "résumé": data.result || "Aucun résumé généré",
+            "status": "success"
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Try: http://localhost:${PORT}/rephrase?sapling=hey wuts going on`);
     console.log(`Try: http://localhost:${PORT}/sapling_grammar?edite=Hi, How are you doing.`);
-    console.log(`Try: http://localhost:${PORT}/autocomplete?sapling_phrase=Hi how are`);
+    console.log(`Try: http://localhost:${PORT}/autocomplete?sapling_phras=Hi how are`);
+    console.log(`Try POST: http://localhost:${PORT}/summarize with {"text": "your text here"}`);
 });
