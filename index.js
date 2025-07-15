@@ -108,7 +108,7 @@ app.get('/autocomplete', async (req, res) => {
     }
 
     try {
-        const data = await autocompleteText(sapling_phras);
+        const data = await autocompleteText(sapling_phrase);
         
         return res.json({
             "phrase incomplète": sapling_phras,
@@ -124,5 +124,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Try: http://localhost:${PORT}/rephrase?sapling=hey wuts going on`);
     console.log(`Try: http://localhost:${PORT}/sapling_grammar?edite=Hi, How are you doing.`);
-    console.log(`Try: http://localhost:${PORT}/autocomplete?sapling_phras=Hi how are`);
+    console.log(`Try: http://localhost:${PORT}/autocomplete?sapling_phrase=Hi how are`);
 });
