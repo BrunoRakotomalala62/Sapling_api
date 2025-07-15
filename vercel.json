@@ -1,4 +1,3 @@
-
 {
   "version": 2,
   "builds": [
@@ -12,8 +11,5 @@
       "src": "/(.*)",
       "dest": "/index.js"
     }
-  ],
-  "env": {
-    "API_KEY_SAPLING": "@api_key_sapling"
-  }
+  ]
 }
