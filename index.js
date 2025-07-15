@@ -39,6 +39,23 @@ async function grammarCheck(text) {
     }
 }
 
+async function autocompleteText(query) {
+    try {
+        const response = await axios.post(
+            'https://api.sapling.ai/api/v1/complete',
+            {
+                key: process.env.API_KEY_SAPLING,
+                session_id: 'test session',
+                query,
+            },
+        );
+
+        return response.data;
+    } catch (err) {
+        throw new Error(err.response?.data?.msg || 'Error completing text');
+    }
+}
+
 app.get('/rephrase', async (req, res) => {
     const { sapling } = req.query;
     
@@ -83,8 +100,29 @@ app.get('/sapling_grammar', async (req, res) => {
     }
 });
 
+app.get('/autocomplete', async (req, res) => {
+    const { sapling_phras } = req.query;
+    
+    if (!sapling_phras) {
+        return res.status(400).json({ error: 'Parameter sapling_phras is required' });
+    }
+
+    try {
+        const data = await autocompleteText(sapling_phras);
+        
+        return res.json({
+            "phrase incomplète": sapling_phras,
+            "suggestions": data.suggestions || [],
+            "status": "success"
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Try: http://localhost:${PORT}/rephrase?sapling=hey wuts going on`);
     console.log(`Try: http://localhost:${PORT}/sapling_grammar?edite=Hi, How are you doing.`);
+    console.log(`Try: http://localhost:${PORT}/autocomplete?sapling_phras=Hi how are`);
 });
