@@ -75,6 +75,22 @@ async function summarizeText(text) {
     }
 }
 
+async function detectAI(text) {
+    try {
+        const response = await axios.post(
+            'https://api.sapling.ai/api/v1/aidetect',
+            {
+                key: process.env.API_KEY_SAPLING,
+                text,
+            },
+        );
+
+        return response.data;
+    } catch (err) {
+        throw new Error(err.response?.data?.msg || 'Error detecting AI content');
+    }
+}
+
 app.get('/rephrase', async (req, res) => {
     const { sapling } = req.query;
     
@@ -139,6 +155,28 @@ app.get('/autocomplete', async (req, res) => {
     }
 });
 
+app.get('/ai', async (req, res) => {
+    const { detection } = req.query;
+    
+    if (!detection) {
+        return res.status(400).json({ error: 'Parameter detection is required' });
+    }
+
+    try {
+        const data = await detectAI(detection);
+        
+        return res.json({
+            "texte analysé": detection,
+            "score IA": data.score || 0,
+            "probabilité IA": data.score ? `${(data.score * 100).toFixed(2)}%` : "0%",
+            "verdict": data.score > 0.5 ? "Probablement généré par IA" : "Probablement écrit par un humain",
+            "status": "success"
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 app.post('/summarize', async (req, res) => {
     const { text } = req.body;
     
@@ -164,5 +202,6 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`Try: http://localhost:${PORT}/rephrase?sapling=hey wuts going on`);
     console.log(`Try: http://localhost:${PORT}/sapling_grammar?edite=Hi, How are you doing.`);
     console.log(`Try: http://localhost:${PORT}/autocomplete?sapling_phras=Hi how are`);
+    console.log(`Try: http://localhost:${PORT}/ai?detection=This is sample text`);
     console.log(`Try POST: http://localhost:${PORT}/summarize with {"text": "your text here"}`);
 });
